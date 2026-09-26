@@ -70,7 +70,6 @@ const links = {
 
 export const site = {
   name: "Yetmgeta Redahegn",
-  nickname: "Tey",
   role: "AI & Automation Engineer",
   /** Production URL, used for canonical links, Open Graph and the sitemap. No trailing slash. */
   url: "https://yetmgetaredahegn.github.io",
@@ -397,7 +396,7 @@ export const site = {
           ],
         },
       ],
-      // TODO(Tey): the brief lists no highlights for this project. These three only restate
+      // TODO: the brief lists no highlights for this project. These three only restate
       // facts from "What I built"; confirm or rewrite them.
       highlights: [
         "Descriptions are enriched before the AI sees a tender, so verdicts rest on the scope of work, not the title",

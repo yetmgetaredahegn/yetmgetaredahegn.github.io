@@ -1,6 +1,6 @@
 # yetmgetaredahegn.github.io
 
-Portfolio site for Yetmgeta Redahegn (Tey), AI & Automation Engineer.
+Portfolio site for Yetmgeta Redahegn, AI & Automation Engineer.
 
 Next.js (App Router) + TypeScript + Tailwind CSS, exported as a fully static site. There is no backend: no API routes, no server actions, no forms.
 

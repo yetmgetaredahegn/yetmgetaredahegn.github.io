@@ -16,7 +16,6 @@ const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
   name: site.name,
-  alternateName: site.nickname,
   jobTitle: site.role,
   url: `${site.url}/`,
   email: `mailto:${site.email}`,

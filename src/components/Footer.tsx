@@ -15,7 +15,6 @@ export function Footer() {
           <p className="flex items-center gap-2.5 font-display text-[17px] font-semibold text-ink">
             <Mark className="size-6 shrink-0" />
             {site.name}
-            <span className="font-sans text-sm font-normal text-muted">({site.nickname})</span>
           </p>
           <p className="mt-2 text-sm text-muted">
             {site.role} · {site.availability}
