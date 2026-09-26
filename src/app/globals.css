@@ -1,26 +1,674 @@
 @import "tailwindcss";
 
+/* Color tokens. Light is the default; dark follows the system unless the
+   theme toggle has set data-theme on <html>. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #edf1f4;
+  --surface: #ffffff;
+  --ink: #0f1b26;
+  --muted: #52616d;
+  --line: #d2dbe2;
+  --accent: #2246d6;
+  --accent-soft: #e2e8fc;
+  --pass: #17804f;
+  --pass-soft: #ddf2e7;
+  /* Text on solid accent / pass fills. */
+  --on-fill: #ffffff;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #0c141b;
+    --surface: #131e28;
+    --ink: #e6edf3;
+    --muted: #93a3b0;
+    --line: #243441;
+    --accent: #7e9bff;
+    --accent-soft: #1b2a4f;
+    --pass: #5ccb93;
+    --pass-soft: #14342a;
+    --on-fill: #0c141b;
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root[data-theme="dark"] {
+  --bg: #0c141b;
+  --surface: #131e28;
+  --ink: #e6edf3;
+  --muted: #93a3b0;
+  --line: #243441;
+  --accent: #7e9bff;
+  --accent-soft: #1b2a4f;
+  --pass: #5ccb93;
+  --pass-soft: #14342a;
+  --on-fill: #0c141b;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-pass: var(--pass);
+  --color-pass-soft: var(--pass-soft);
+  --color-on-fill: var(--on-fill);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+@layer base {
+  html {
+    /* Keeps hash targets clear of the sticky header. */
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--on-fill);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* The theme toggle shows the icon for the theme it switches to. Pure CSS,
+   so the right icon is there before hydration. */
+.theme-icon-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-icon-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .theme-icon-dark {
+    display: block;
+  }
+}
+
+:root[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+:root[data-theme="dark"] .theme-icon-dark {
+  display: block;
+}
+
+/* Dot-grid canvas behind architecture diagrams. */
+.canvas-grid {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: -8px -8px;
+}
+
+/* Architecture diagram. A vertical stack by default; once its container is
+   wide enough for every node (the `data-row` tier, set by the component),
+   it becomes a left-to-right row. Arrows sit in the gaps between nodes. */
+.arch {
+  container-type: inline-size;
+}
+
+.arch-list {
+  display: grid;
+  grid-template-columns: minmax(0, 22rem);
+  row-gap: 1.75rem;
+}
+
+.arch-node {
+  position: relative;
+  display: flex;
+}
+
+.arch-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 10px;
+  height: 1.75rem;
+  transform: translateX(-50%);
+}
+
+.arch-arrow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.arch-arrow .arch-arrow-h {
+  display: none;
+}
+
+@container (min-width: 24rem) {
+  .arch-list[data-row="24"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="24"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="24"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="24"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+@container (min-width: 32rem) {
+  .arch-list[data-row="32"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="32"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="32"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="32"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+@container (min-width: 40rem) {
+  .arch-list[data-row="40"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="40"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="40"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="40"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+@container (min-width: 48rem) {
+  .arch-list[data-row="48"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="48"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="48"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="48"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+@container (min-width: 56rem) {
+  .arch-list[data-row="56"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="56"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="56"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="56"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+@container (min-width: 64rem) {
+  .arch-list[data-row="64"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="64"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="64"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="64"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+@container (min-width: 72rem) {
+  .arch-list[data-row="72"] {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--n), minmax(0, 11rem));
+    column-gap: 16px;
+  }
+  .arch-list[data-row="72"] .arch-arrow {
+    top: 50%;
+    left: 100%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%);
+  }
+  .arch-list[data-row="72"] .arch-arrow-h {
+    display: block;
+  }
+  .arch-list[data-row="72"] .arch-arrow-v {
+    display: none;
+  }
+}
+
+/* Small entrance animations for the copy-email label and the mobile menu.
+   Off for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .swap-in {
+    animation: swap-in 150ms ease-out;
+  }
+  .menu-in {
+    animation: menu-in 160ms ease-out;
+  }
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Dot grid behind the hero, faded out towards the edges. */
+.hero-canvas {
+  background-image: radial-gradient(var(--line) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 65% 70% at 72% 45%, #000 15%, transparent 72%);
+  mask-image: radial-gradient(ellipse 65% 70% at 72% 45%, #000 15%, transparent 72%);
+}
+
+/* Hero tabs: the bar under the active tab fills, then the next tab opens.
+   Paused on hover, by the pause button, off-screen, or for reduced motion. */
+.tab-progress {
+  transform: scaleX(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab-progress {
+    animation: tab-progress 7s linear forwards;
+  }
+  .showcase:hover .tab-progress,
+  .showcase[data-paused] .tab-progress {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes tab-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- Buttons ---------- */
+@layer components {
+  .btn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border-radius: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease;
+  }
+  .btn-md {
+    height: 3rem;
+    padding: 0 1.25rem;
+    font-size: 15px;
+  }
+  .btn-md:has(.btn-icon) {
+    padding-right: 0.5rem;
+  }
+  .btn-sm {
+    height: 2.25rem;
+    gap: 0.5rem;
+    padding: 0 0.875rem;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  /* Primary: a solid key with a lit top edge and a soft coloured shadow. */
+  .btn-primary {
+    background-color: var(--accent);
+    color: var(--on-fill);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.25),
+      inset 0 -1px 0 rgb(0 0 0 / 0.15),
+      0 1px 2px rgb(15 27 38 / 0.2),
+      0 8px 20px -8px color-mix(in oklab, var(--accent) 75%, transparent);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.25),
+      inset 0 -1px 0 rgb(0 0 0 / 0.15),
+      0 2px 4px rgb(15 27 38 / 0.2),
+      0 14px 28px -10px color-mix(in oklab, var(--accent) 85%, transparent);
+  }
+  /* A band of light that sweeps across on hover. */
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.3) 50%, transparent 70%);
+    transform: translateX(-110%);
+  }
+
+  /* Secondary: a raised sheet that lifts and darkens its edge on hover. */
+  .btn-secondary {
+    background-color: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgb(15 27 38 / 0.06);
+  }
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklab, var(--ink) 35%, var(--line));
+    box-shadow: 0 10px 22px -12px rgb(15 27 38 / 0.35);
+  }
+
+  .btn:active {
+    transform: translateY(0) scale(0.985);
+  }
+
+  /* Icon chip at the end of a button. */
+  .btn-icon {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .btn-primary .btn-icon {
+    background-color: rgb(255 255 255 / 0.16);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  }
+  .btn-secondary .btn-icon {
+    background-color: var(--bg);
+    border: 1px solid var(--line);
+  }
+  .btn-icon svg {
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn-primary:hover::after {
+    transform: translateX(110%);
+    transition: transform 700ms ease;
+  }
+  /* The arrow leaves its chip and comes back round, like a loop. */
+  .btn:hover .btn-icon svg:not(.icon-down) {
+    animation: icon-out-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .btn:hover .btn-icon .icon-down {
+    animation: icon-down 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn:hover,
+  .btn:active {
+    transform: none;
+  }
+}
+
+@keyframes icon-out-in {
+  45% {
+    transform: translate(140%, -140%);
+  }
+  46% {
+    transform: translate(-140%, 140%);
+  }
+}
+
+@keyframes icon-down {
+  45% {
+    transform: translateY(140%);
+  }
+  46% {
+    transform: translateY(-140%);
+  }
+}
+
+/* ---------- Hero ---------- */
+
+/* Status pill dot: a slow ring pulses out from it. */
+.live-dot {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background-color: var(--accent);
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--accent);
+  opacity: 0;
+}
+
+/* Inline headline glyphs. */
+.glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 0.62em;
+  margin-left: 0.14em;
+  padding: 0 0.2em;
+  vertical-align: 0.05em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background-color: var(--surface);
+  box-shadow: 0 1px 2px rgb(15 27 38 / 0.06);
+}
+
+.glyph-pulse {
+  transform-box: fill-box;
+  opacity: 0;
+}
+
+.glyph-check {
+  display: inline-grid;
+  place-items: center;
+  width: 0.46em;
+  height: 0.46em;
+  margin-left: 0.1em;
+  vertical-align: 0.02em;
+  border-radius: 999px;
+  background-color: var(--pass);
+  color: var(--on-fill);
+  box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--pass) 70%, transparent);
+}
+
+/* The green underline under the emphasis, drawn with a background so it can animate. */
+.measure {
+  background-image: linear-gradient(var(--pass), var(--pass));
+  background-repeat: no-repeat;
+  background-position: 0 92%;
+  background-size: 100% 0.075em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* The hero card sits a little above the page. */
+.card-lift {
+  border-radius: 0.5rem;
+  box-shadow:
+    0 1px 2px rgb(15 27 38 / 0.05),
+    0 24px 48px -24px rgb(15 27 38 / 0.28);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot::after {
+    animation: live-ring 2.4s ease-out infinite;
+  }
+  .glyph-pulse {
+    animation: glyph-pulse 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+  .measure {
+    animation: draw-underline 900ms cubic-bezier(0.65, 0, 0.35, 1) 450ms both;
+  }
+  .glyph-check {
+    animation: stamp-in 520ms cubic-bezier(0.34, 1.56, 0.64, 1) 1300ms both;
+  }
+}
+
+@keyframes live-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes glyph-pulse {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(36px);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translateX(36px);
+    opacity: 0;
+  }
+}
+
+@keyframes draw-underline {
+  from {
+    background-size: 0% 0.075em;
+  }
+}
+
+@keyframes stamp-in {
+  from {
+    transform: scale(0) rotate(-25deg);
+  }
+}
+
+/* A green step pulses once when the hero trace reaches it. */
+@media (prefers-reduced-motion: no-preference) {
+  .pass-hit {
+    animation: pass-hit 700ms ease-out;
+  }
+}
+
+@keyframes pass-hit {
+  0% {
+    box-shadow:
+      inset 0 0 0 1px var(--pass),
+      0 0 0 0 color-mix(in oklab, var(--pass) 55%, transparent);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 1px var(--pass),
+      0 0 0 10px color-mix(in oklab, var(--pass) 0%, transparent);
+  }
 }
