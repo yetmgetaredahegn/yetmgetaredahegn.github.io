@@ -1,4 +1,4 @@
-# Portfolio brief: Yetmgeta Redahegn (Tey)
+# Portfolio brief: Yetmgeta Redahegn
 
 This file is the full specification for my portfolio website. Build exactly what it describes.
 
@@ -58,7 +58,7 @@ This file is the full specification for my portfolio website. Build exactly what
 
 ## 3. Identity and links
 
-- **Name:** Yetmgeta Redahegn (goes by Tey)
+- **Name:** Yetmgeta Redahegn
 - **Title:** AI & Automation Engineer
 - **Location:** Addis Ababa, Ethiopia (UTC+3). Full overlap with Europe, morning overlap with the US.
 - **Email:** yetmgeta.tech@gmail.com. Show it as selectable text with a "Copy email" button; there's no form.
